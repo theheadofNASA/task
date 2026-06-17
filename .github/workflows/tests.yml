@@ -1,0 +1,43 @@
+name: Run Tests and Push to Main
+
+on:
+  push:
+    branches:
+      - source
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source branch
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm install
+      working-directory: ./task
+
+    - name: Run Jest tests
+      run: npm test
+      working-directory: ./task
+
+    - name: Deploy to main branch
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        
+        git checkout -b temp-main-branch
+        
+        rm -f task/getSum.js
+        
+        git add .
+        git commit -m "chore: sync with source" || echo "No changes to commit"
+        
+        git push origin temp-main-branch:main --force
